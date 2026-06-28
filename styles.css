@@ -1,18 +1,35 @@
 :root {
-    --bg:         #0f1117;
-    --surface:    #1a1f2e;
-    --surface2:   #212840;
-    --border:     #2a3147;
-    --teal:       #00d4aa;
-    --teal-dim:   #00a882;
-    --amber:      #f5a623;
-    --amber-dim:  #c4831a;
-    --danger:     #ff4d6d;
-    --danger-dim: #cc3d56;
-    --text:       #e2e8f0;
-    --muted:      #8892a4;
-    --purple:     #a78bfa;
-    --ui-scale:   0.92;
+    --bg:          #08090d;
+    --surface:     #0f1117;
+    --surface2:    #161b27;
+    --border:      #1e2535;
+    --text:        #f0f4f8;
+    --muted:       #64748b;
+
+    --primary:     #6366f1;
+    --primary-dim: #4f52cc;
+    --primary-soft: rgba(99,102,241,0.1);
+    --primary-glow: rgba(99,102,241,0.2);
+
+    --danger:      #f43f5e;
+    --danger-dim:  #be123c;
+    --danger-soft: rgba(244,63,94,0.1);
+
+    --amber:       #f59e0b;
+    --amber-dim:   #d97706;
+    --amber-soft:  rgba(245,158,11,0.1);
+
+    --success:     #10b981;
+    --success-dim: #059669;
+    --success-soft: rgba(16,185,129,0.1);
+
+    --radius:      10px;
+    --radius-sm:   6px;
+    --shadow:      0 4px 24px rgba(0,0,0,0.4);
+    --speed:       0.18s;
+    --ease:        cubic-bezier(.4,0,.2,1);
+
+    --ui-scale: 0.92;
 }
 
 * {
@@ -38,7 +55,7 @@ body {
 }
 
 .main-header {
-    background: linear-gradient(180deg, #0d1520 0%, #111827 100%);
+    background: linear-gradient(180deg, #08090d 0%, #0f1117 100%);
     border-bottom: 1px solid var(--border);
     position: fixed;
     top: 0;
@@ -133,11 +150,11 @@ body {
 }
 
 .nav-btn.active {
-    background-color: var(--teal);
-    color: #0f1117;
-    border-color: var(--teal);
+    background-color: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
     font-weight: 700;
-    box-shadow: 0 0 16px rgba(0, 212, 170, 0.3);
+    box-shadow: 0 0 20px var(--primary-glow);
 }
 
 .workspace-layout {
@@ -148,7 +165,7 @@ body {
 .sidebar {
     margin-top: 140px;
     width: 250px;
-    background-color: #111827;
+    background-color: #0f1117;
     border-right: 1px solid var(--border);
     padding: 24px 16px;
     display: flex;
