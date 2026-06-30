@@ -1,31 +1,31 @@
 :root {
-    --bg:          #08090d;
-    --surface:     #0f1117;
-    --surface2:    #161b27;
-    --border:      #1e2535;
-    --text:        #f0f4f8;
-    --muted:       #64748b;
+    --bg:          #faf8f5;
+    --surface:     #ffffff;
+    --surface2:    #f3f0ea;
+    --border:      #e8e2d8;
+    --text:        #2d2a26;
+    --muted:       #8b8478;
 
-    --primary:     #6366f1;
-    --primary-dim: #4f52cc;
-    --primary-soft: rgba(99,102,241,0.1);
-    --primary-glow: rgba(99,102,241,0.2);
+    --primary:     #ec7c5b;
+    --primary-dim: #d4623f;
+    --primary-soft: rgba(236,124,91,0.12);
+    --primary-glow: rgba(236,124,91,0.18);
 
-    --danger:      #f43f5e;
-    --danger-dim:  #be123c;
-    --danger-soft: rgba(244,63,94,0.1);
+    --danger:      #e2553f;
+    --danger-dim:  #c43d2a;
+    --danger-soft: rgba(226,85,63,0.1);
 
-    --amber:       #f59e0b;
-    --amber-dim:   #d97706;
-    --amber-soft:  rgba(245,158,11,0.1);
+    --amber:       #d4a039;
+    --amber-dim:   #b6841f;
+    --amber-soft:  rgba(212,160,57,0.12);
 
-    --success:     #10b981;
-    --success-dim: #059669;
-    --success-soft: rgba(16,185,129,0.1);
+    --success:     #4a9b7f;
+    --success-dim: #357c63;
+    --success-soft: rgba(74,155,127,0.12);
 
     --radius:      10px;
     --radius-sm:   6px;
-    --shadow:      0 4px 24px rgba(0,0,0,0.4);
+    --shadow:      0 4px 18px rgba(45, 42, 38, 0.06);
     --speed:       0.18s;
     --ease:        cubic-bezier(.4,0,.2,1);
 
@@ -44,6 +44,12 @@ body {
     color: var(--text);
     -webkit-font-smoothing: antialiased;
 }
+::selection { background: var(--primary-soft); color: var(--primary-dim); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); 
+}
 
 .app-container {
     display: flex;
@@ -55,7 +61,7 @@ body {
 }
 
 .main-header {
-    background: linear-gradient(180deg, #08090d 0%, #0f1117 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
     border-bottom: 1px solid var(--border);
     position: fixed;
     top: 0;
@@ -93,9 +99,10 @@ body {
     box-shadow: 0 0 20px var(--primary-glow);
     transition: box-shadow var(--speed) var(--ease), transform var(--speed) var(--ease);
 }
+
 .shield-logo-box:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 28px var(--primary-glow);
+    box-shadow: 0 0 0 6px var(--primary-soft);
 }
 
 
@@ -171,7 +178,7 @@ body {
 .sidebar {
     margin-top: 140px;
     width: 250px;
-    background-color: #0f1117;
+    background-color: #ffffff;
     border-right: 1px solid var(--border);
     padding: 24px 16px;
     display: flex;
