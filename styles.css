@@ -963,6 +963,91 @@ body {
     color: var(--text);
 }
 
+.stat-card {
+  transition: transform var(--speed) var(--ease),
+              box-shadow var(--speed) var(--ease),
+              border-color var(--speed) var(--ease);
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(45,42,38,0.1);
+  border-color: var(--primary);
+}
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: var(--radius) var(--radius) 0 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--speed) var(--ease);
+}
+.stat-card { position: relative; overflow: hidden; }
+.stat-card:hover::before { transform: scaleX(1); }
+
+.badge-fake {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+.badge-suspicious {
+  background: var(--amber-soft);
+  color: var(--amber-dim);
+  border: 1px solid var(--amber);
+  font-weight: 700;
+}
+.badge-genuine {
+  background: var(--success-soft);
+  color: var(--success-dim);
+  border: 1px solid var(--success);
+  font-weight: 700;
+}
+
+.data-table tbody tr {
+  transition: background var(--speed) var(--ease), transform var(--speed) var(--ease);
+}
+.data-table tbody tr:hover {
+  background: var(--surface2);
+  transform: translateX(2px);
+}
+
+.score-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 6px;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .6s var(--ease);
+}
+.score-bar-fill.high  { background: var(--danger); }
+.score-bar-fill.mid   { background: var(--amber); }
+.score-bar-fill.low   { background: var(--success); }
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin-left: 8px;
+}
+
 .suspicion-score-box,
 .feature-breakdown-box,
 .analysis-summary-box {
