@@ -141,6 +141,14 @@ const performAccountSearch = () => {
         // Update summary
         const summaryList = document.getElementById('detail-summary');
         summaryList.innerHTML = foundAccount.summary.map(item => `<li>${item}</li>`).join('');
+
+        // Render feature-breakdown radar chart
+        renderRadarChart(document.getElementById('radar-chart-wrap'), {
+            behaviorScore: foundAccount.behaviorScore,
+            networkScore: foundAccount.networkScore,
+            contentScore: foundAccount.contentScore,
+            trendScore: foundAccount.trendScore
+        });
     } else {
         // Account not found
         resultBox.style.display = "block";
@@ -378,3 +386,123 @@ hintLinks.forEach(link => {
         }
     });
 });
+
+// --- SECTION 7: DEPENDENCY-FREE SVG CHARTS ---
+// Both charts are plain inline SVG (no Chart.js / no CDN) so the dashboard
+// keeps working fully offline, matching the "local network review" use case.
+
+/**
+ * Renders a donut chart + legend into `container` from an array of
+ * { label, value, colorVar } segments. `value` is treated as a percentage
+ * (0-100). colorVar should be a CSS custom property reference, e.g. 'var(--teal)'.
+ */
+const renderDonutChart = (container, segments) => {
+    if(!container) return;
+
+    const size = 130;
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = 50;
+    const strokeWidth = 16;
+    const circumference = 2 * Math.PI * r;
+    const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
+
+    let offsetAccum = 0;
+    const arcs = segments.map(seg => {
+        const fraction = seg.value / total;
+        const dash = Math.max(fraction * circumference - 1.5, 0); // small gap between segments
+        const gap = circumference - dash;
+        const rotation = (offsetAccum / total) * 360 - 90;
+        offsetAccum += seg.value;
+        return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" style="stroke:${seg.colorVar}" stroke-width="${strokeWidth}" stroke-dasharray="${dash} ${gap}" stroke-linecap="round" transform="rotate(${rotation} ${cx} ${cy})"></circle>`;
+    }).join('');
+
+    const dominant = segments.reduce((max, s) => (s.value > max.value ? s : max), segments[0]);
+
+    const legend = segments.map(seg => `
+        <div class="donut-legend-item">
+            <span class="donut-legend-dot" style="background:${seg.colorVar}"></span>
+            <span>${seg.label}</span>
+            <strong>${seg.value}%</strong>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <svg class="donut-chart-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+            ${arcs}
+            <text class="donut-center-label" x="${cx}" y="${cy - 3}" text-anchor="middle">${dominant.value}%</text>
+            <text class="donut-center-sublabel" x="${cx}" y="${cy + 13}" text-anchor="middle">${dominant.label.toUpperCase()}</text>
+        </svg>
+        <div class="donut-legend">${legend}</div>
+    `;
+};
+
+const RADAR_AXES = [
+    { key: 'behaviorScore', label: 'Behavior', angle: -90 },
+    { key: 'networkScore',  label: 'Network',  angle: 0 },
+    { key: 'contentScore',  label: 'Content',  angle: 90 },
+    { key: 'trendScore',    label: 'Trend',    angle: 180 }
+];
+
+const radarPolarPoint = (cx, cy, r, angleDeg) => {
+    const rad = (angleDeg * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+/**
+ * Renders a 4-axis radar/spider chart into `container` for the
+ * behavior / network / content / trend score breakdown of one account.
+ */
+const renderRadarChart = (container, scores) => {
+    if(!container) return;
+
+    const width = 280;
+    const height = 220;
+    const cx = 140;
+    const cy = 105;
+    const maxR = 62;
+    const labelR = 84;
+
+    const gridPolygons = [0.25, 0.5, 0.75, 1].map(frac => {
+        const pts = RADAR_AXES.map(axis => radarPolarPoint(cx, cy, maxR * frac, axis.angle));
+        return `<polygon class="radar-grid" points="${pts.map(p => `${p.x},${p.y}`).join(' ')}"></polygon>`;
+    }).join('');
+
+    const axisLines = RADAR_AXES.map(axis => {
+        const p = radarPolarPoint(cx, cy, maxR, axis.angle);
+        return `<line class="radar-axis" x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}"></line>`;
+    }).join('');
+
+    const labels = RADAR_AXES.map(axis => {
+        const p = radarPolarPoint(cx, cy, labelR, axis.angle);
+        let anchor = 'middle';
+        if(axis.angle === 0) anchor = 'start';
+        if(axis.angle === 180) anchor = 'end';
+        return `<text class="radar-label" x="${p.x}" y="${p.y}" text-anchor="${anchor}" dominant-baseline="middle">${axis.label}</text>`;
+    }).join('');
+
+    const dataPoints = RADAR_AXES.map(axis => {
+        const val = Math.min(100, Math.max(0, Number(scores[axis.key]) || 0));
+        return radarPolarPoint(cx, cy, maxR * (val / 100), axis.angle);
+    });
+    const dataPolygon = `<polygon class="radar-fill" points="${dataPoints.map(p => `${p.x},${p.y}`).join(' ')}"></polygon>`;
+    const dataDots = dataPoints.map(p => `<circle class="radar-point" cx="${p.x}" cy="${p.y}" r="3"></circle>`).join('');
+
+    container.innerHTML = `
+        <svg class="radar-chart-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+            ${gridPolygons}
+            ${axisLines}
+            ${dataPolygon}
+            ${dataDots}
+            ${labels}
+        </svg>
+    `;
+};
+
+// Initial dashboard donut render — mirrors the Detection Rate percentages
+// (Fake / Suspicious / Genuine) shown in the progress bars below it.
+renderDonutChart(document.getElementById('detection-donut-wrap'), [
+    { label: 'Genuine',    value: 71.7, colorVar: 'var(--teal)' },
+    { label: 'Fake',       value: 22.5, colorVar: 'var(--danger)' },
+    { label: 'Suspicious', value: 5.8,  colorVar: 'var(--amber)' }
+]);
