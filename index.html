@@ -301,7 +301,12 @@
                                 <button id="toggle-accounts-btn" class="toggle-accounts-btn">Show Account Details</button>
                             </div>
 
-                            <table id="accounts-table" class="accounts-table hidden-table">
+                            <div id="accounts-table-wrap" class="hidden-table">
+                                <div class="table-toolbar">
+                                    <input type="text" id="accounts-search" class="table-search-input" placeholder="Search by username or classification…">
+                                    <button id="accounts-export-btn" class="export-csv-btn" type="button">⬇ Export CSV</button>
+                                </div>
+                                <table id="accounts-table" class="accounts-table">
                                 <thead>
                                     <tr>
                                         <th>Username</th>
@@ -446,7 +451,8 @@
                                         <td><span class="risk-low-text">Low Risk</span></td>
                                     </tr>
                                 </tbody>
-                            </table>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -469,8 +475,12 @@
                         <div class="csv-results-header">
                             <h3>Analysis Results (<span id="csv-results-count">0</span> accounts)</h3>
                         </div>
+                        <div class="table-toolbar">
+                            <input type="text" id="csv-results-search" class="table-search-input" placeholder="Search results…">
+                            <button id="csv-export-btn" class="export-csv-btn" type="button">⬇ Download Report (CSV)</button>
+                        </div>
                         <div class="csv-results-table-container">
-                            <table class="accounts-table csv-results-table">
+                            <table id="csv-results-table" class="accounts-table csv-results-table">
                                 <thead>
                                     <tr>
                                         <th>Username</th>
@@ -697,7 +707,10 @@
 
                     <div class="table-container-box">
                         <h3 class="table-section-title">Monthly Reports</h3>
-                        <table class="analytics-data-table">
+                        <div class="table-toolbar">
+                            <input type="text" id="monthly-reports-search" class="table-search-input" placeholder="Search by month…">
+                        </div>
+                        <table id="monthly-reports-table" class="analytics-data-table">
                             <thead>
                                 <tr>
                                     <th>Month</th>
@@ -735,7 +748,10 @@
 
                     <div class="table-container-box">
                         <h3 class="table-section-title">Daily Statistics</h3>
-                        <table class="analytics-data-table">
+                        <div class="table-toolbar">
+                            <input type="text" id="daily-stats-search" class="table-search-input" placeholder="Search by date…">
+                        </div>
+                        <table id="daily-stats-table" class="analytics-data-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
