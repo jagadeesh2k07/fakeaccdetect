@@ -353,14 +353,15 @@ filterButtons.forEach(button => {
 // --- SECTION 5: ALL ACCOUNTS TABLE TOGGLE CONTROLLER ---
 const toggleAccountsBtn = document.getElementById('toggle-accounts-btn');
 const accountsTable = document.getElementById('accounts-table');
+const accountsTableWrap = document.getElementById('accounts-table-wrap');
 
-if(toggleAccountsBtn && accountsTable) {
+if(toggleAccountsBtn && accountsTableWrap) {
     toggleAccountsBtn.addEventListener('click', () => {
-        // Toggle visibility of the table
-        accountsTable.classList.toggle('hidden-table');
+        // Toggle visibility of the table (+ its search/export toolbar)
+        accountsTableWrap.classList.toggle('hidden-table');
         
         // Toggle button text
-        if(accountsTable.classList.contains('hidden-table')) {
+        if(accountsTableWrap.classList.contains('hidden-table')) {
             toggleAccountsBtn.textContent = 'Show Account Details';
         } else {
             toggleAccountsBtn.textContent = 'Hide Account Details';
@@ -506,3 +507,179 @@ renderDonutChart(document.getElementById('detection-donut-wrap'), [
     { label: 'Fake',       value: 22.5, colorVar: 'var(--danger)' },
     { label: 'Suspicious', value: 5.8,  colorVar: 'var(--amber)' }
 ]);
+
+// --- SECTION 8: SORTABLE TABLES, LIVE SEARCH, AND CSV EXPORT ---
+
+/**
+ * Converts a table cell's text into a value that sorts sensibly:
+ * percentages and comma-formatted numbers become numbers, "2 years" /
+ * "3 months" style ages become a common "months" unit, recognizable dates
+ * become timestamps, everything else falls back to lowercase string compare.
+ */
+const parseSortValue = rawText => {
+    const clean = rawText.trim();
+
+    if(/^-?\d+(\.\d+)?%$/.test(clean)) {
+        return parseFloat(clean);
+    }
+
+    const numericOnly = clean.replace(/,/g, '');
+    if(/^-?\d+(\.\d+)?$/.test(numericOnly)) {
+        return parseFloat(numericOnly);
+    }
+
+    const ageMatch = clean.match(/^([\d.]+)\s*(year|years|month|months|week|weeks)$/i);
+    if(ageMatch) {
+        const value = parseFloat(ageMatch[1]);
+        const unit = ageMatch[2].toLowerCase();
+        if(unit.startsWith('year')) return value * 12;
+        if(unit.startsWith('month')) return value;
+        return value / 4; // weeks -> fractional months
+    }
+
+    if(/\b\d{4}\b/.test(clean)) {
+        const parsedDate = Date.parse(clean);
+        if(!Number.isNaN(parsedDate)) return parsedDate;
+    }
+
+    return clean.toLowerCase();
+};
+
+/**
+ * Makes every <th> in a table's header row clickable for ascending/descending
+ * sort of the matching column. Re-reads rows from the DOM at click time, so
+ * it keeps working after a table's body is re-rendered (e.g. new CSV upload).
+ */
+const makeSortable = table => {
+    if(!table) return;
+    const headerRow = table.querySelector('thead tr');
+    const tbody = table.querySelector('tbody');
+    if(!headerRow || !tbody) return;
+
+    const headers = Array.from(headerRow.querySelectorAll('th'));
+    headers.forEach((th, colIndex) => {
+        th.classList.add('sortable-th');
+        th.addEventListener('click', () => {
+            const nextDir = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+            th.classList.add(nextDir === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.classList.contains('no-results-row'));
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.children[colIndex];
+                const cellB = rowB.children[colIndex];
+                if(!cellA || !cellB) return 0;
+                const valueA = parseSortValue(cellA.textContent);
+                const valueB = parseSortValue(cellB.textContent);
+                let comparison;
+                if(typeof valueA === 'number' && typeof valueB === 'number') {
+                    comparison = valueA - valueB;
+                } else {
+                    comparison = String(valueA).localeCompare(String(valueB));
+                }
+                return nextDir === 'asc' ? comparison : -comparison;
+            });
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+};
+
+/**
+ * Wires a text input to live-filter a table's rows by substring match
+ * across all cells. Shows a friendly "no results" row when nothing matches.
+ */
+const attachTableSearch = (inputEl, table) => {
+    if(!inputEl || !table) return;
+    const tbody = table.querySelector('tbody');
+    if(!tbody) return;
+    const colSpan = table.querySelectorAll('thead th').length || 1;
+
+    inputEl.addEventListener('input', () => {
+        const query = inputEl.value.trim().toLowerCase();
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.classList.contains('no-results-row'));
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? '' : 'none';
+            if(matches) visibleCount += 1;
+        });
+
+        let noResultsRow = tbody.querySelector('.no-results-row');
+        if(visibleCount === 0 && query !== '') {
+            if(!noResultsRow) {
+                noResultsRow = document.createElement('tr');
+                noResultsRow.className = 'no-results-row';
+                noResultsRow.innerHTML = `<td colspan="${colSpan}">No matching rows for "${''}"</td>`;
+                tbody.appendChild(noResultsRow);
+            }
+            noResultsRow.querySelector('td').textContent = `No matching rows for "${inputEl.value.trim()}"`;
+            noResultsRow.style.display = '';
+        } else if(noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    });
+};
+
+/**
+ * Reads whatever is currently visible in a table (respects active search
+ * filter and sort order) and downloads it as a CSV file.
+ */
+const exportTableToCsv = (table, filename) => {
+    if(!table) return;
+    const escapeCsvCell = value => {
+        const text = value.replace(/\s+/g, ' ').trim();
+        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+
+    const headerCells = Array.from(table.querySelectorAll('thead th')).map(th => escapeCsvCell(th.textContent));
+    const rows = Array.from(table.querySelectorAll('tbody tr'))
+        .filter(row => row.style.display !== 'none' && !row.classList.contains('no-results-row'))
+        .map(row => Array.from(row.children).map(cell => escapeCsvCell(cell.textContent)));
+
+    if(rows.length === 0) {
+        alert('No visible rows to export — try clearing your search filter.');
+        return;
+    }
+
+    const csvContent = [headerCells, ...rows].map(row => row.join(',')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+// Wire up: All Accounts Overview table
+makeSortable(document.getElementById('accounts-table'));
+attachTableSearch(document.getElementById('accounts-search'), document.getElementById('accounts-table'));
+const accountsExportBtn = document.getElementById('accounts-export-btn');
+if(accountsExportBtn) {
+    accountsExportBtn.addEventListener('click', () => {
+        exportTableToCsv(document.getElementById('accounts-table'), 'accounts-overview.csv');
+    });
+}
+
+// Wire up: CSV batch upload results table
+const csvResultsTable = document.getElementById('csv-results-table');
+makeSortable(csvResultsTable);
+attachTableSearch(document.getElementById('csv-results-search'), csvResultsTable);
+const csvExportBtn = document.getElementById('csv-export-btn');
+if(csvExportBtn) {
+    csvExportBtn.addEventListener('click', () => {
+        exportTableToCsv(csvResultsTable, 'batch-analysis-report.csv');
+    });
+}
+
+// Wire up: Reports view tables (Monthly Reports / Daily Statistics)
+const monthlyReportsTable = document.getElementById('monthly-reports-table');
+makeSortable(monthlyReportsTable);
+attachTableSearch(document.getElementById('monthly-reports-search'), monthlyReportsTable);
+
+const dailyStatsTable = document.getElementById('daily-stats-table');
+makeSortable(dailyStatsTable);
+attachTableSearch(document.getElementById('daily-stats-search'), dailyStatsTable);
