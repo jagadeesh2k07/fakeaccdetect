@@ -1,6 +1,6 @@
 # Fake Account Detection Platform — Security Analytics Dashboard 🛡️📊
 
-A modern, client-side fraud detection interface built to identify suspicious social media profiles through behavioral scoring, risk classification, and visual analytics. This standalone web app is designed as a polished security dashboard for desktop or local network deployment inside offline review environments.
+A modern, client-side fraud detection interface built to identify suspicious social media profiles through behavioral scoring, risk classification, and visual analytics. This standalone web app is designed as a polished security dashboard for desktop or local network deployment inside offline review of environments.
 
 ---
 
